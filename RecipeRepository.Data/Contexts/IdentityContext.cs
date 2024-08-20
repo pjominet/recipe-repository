@@ -13,6 +13,8 @@ public partial class RRContext
         {
             entity.ToTable("AppUser", "identity");
 
+            entity.Property(e => e.ProfileImageUri).HasMaxLength(4000);
+
             entity.Property(e => e.CreatedOn)
                 .HasDefaultValue(DateTime.UtcNow)
                 .HasColumnType("datetime2");
