@@ -4,11 +4,11 @@ using RecipeRepository.Data.Entities.Identity;
 
 namespace RecipeRepository.Data.Contexts;
 
-public partial class RRContext : IdentityDbContext<AppUser>
+public partial class RecipeRepoContext : IdentityDbContext<AppUser>
 {
-    public RRContext() { }
+    public RecipeRepoContext() { }
 
-    public RRContext(DbContextOptions<RRContext> options) : base(options) { }
+    public RecipeRepoContext(DbContextOptions<RecipeRepoContext> options) : base(options) { }
 
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
     {

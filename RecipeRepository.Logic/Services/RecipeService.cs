@@ -1,16 +1,16 @@
 ﻿using AutoMapper;
 using Microsoft.Extensions.Options;
 using RecipeRandomizer.Business.Utils.Exceptions;
-using RecipeRandomizer.Business.Utils.Settings;
+using RecipeRepository.Data.Contexts;
 using RecipeRepository.Data.Entities;
+using RecipeRepository.Logic.Infrastructure.Settings;
 using RecipeRepository.Logic.Interfaces;
 using RecipeRepository.Logic.Models;
 using Recipe = RecipeRepository.Logic.Models.Recipe;
-using RRContext = RecipeRepository.Data.Contexts.RRContext;
 
 namespace RecipeRepository.Logic.Services;
 
-public class RecipeService(RRContext context, IMapper mapper, IOptions<AppSettings> appSettings, IFileService fileService)
+public class RecipeService(RecipeRepoContext context, IMapper mapper, IOptions<AppSettings> appSettings, IFileService fileService)
     : IRecipeService
 {
     private readonly Data.Repositories.RecipeRepository _recipeRepository = new(context);
@@ -81,7 +81,7 @@ public class RecipeService(RRContext context, IMapper mapper, IOptions<AppSettin
 
             // save new recipe image
             var trustedFileName = Guid.NewGuid() + proposedFileExtension;
-            await fileService.SaveFileToDiskAsync(sourceStream, Path.Combine(physicalRoot, _appSettings.UserAvatarsFolder), trustedFileName);
+            await fileService.SaveFileToDisk(sourceStream, Path.Combine(physicalRoot, _appSettings.UserAvatarsFolder), trustedFileName);
 
             recipe.ImageUri = Path.Combine(_appSettings.RecipeImagesFolder, trustedFileName);
             recipe.OriginalImageName = untrustedFileName;

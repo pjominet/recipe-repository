@@ -1,12 +1,12 @@
 ﻿using AutoMapper;
+using RecipeRepository.Data.Contexts;
 using RecipeRepository.Data.Repositories;
 using RecipeRepository.Logic.Interfaces;
 using RecipeRepository.Logic.Models.Nomenclature;
-using RRContext = RecipeRepository.Data.Contexts.RRContext;
 
 namespace RecipeRepository.Logic.Services;
 
-public class QuantityService(RRContext context, IMapper mapper) : IQuantityService
+public class QuantityService(RecipeRepoContext context, IMapper mapper) : IQuantityService
 {
 
     private readonly QuantityRepository _quantityRepository = new(context);

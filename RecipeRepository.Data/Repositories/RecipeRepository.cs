@@ -1,10 +1,10 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using RecipeRepository.Data.Contexts;
 using RecipeRepository.Data.Entities;
-using RRContext = RecipeRepository.Data.Contexts.RRContext;
 
 namespace RecipeRepository.Data.Repositories;
 
-public class RecipeRepository(RRContext context) : BaseRepository<RRContext>(context)
+public class RecipeRepository(RecipeRepoContext context) : BaseRepository<RecipeRepoContext>(context)
 {
     public async Task<int> GetPublishedRecipeCount()
     {

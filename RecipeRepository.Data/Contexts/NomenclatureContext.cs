@@ -3,7 +3,7 @@ using RecipeRepository.Data.Entities.Nomenclature;
 
 namespace RecipeRepository.Data.Contexts;
 
-public partial class RRContext
+public partial class RecipeRepoContext
 {
     public virtual DbSet<Cost> Costs { get; set; }
     public virtual DbSet<Difficulty> Difficulties { get; set; }

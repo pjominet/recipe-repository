@@ -3,7 +3,7 @@ using RecipeRepository.Data.Entities.Identity;
 
 namespace RecipeRepository.Data.Contexts;
 
-public partial class RRContext
+public partial class RecipeRepoContext
 {
     public DbSet<AppUser> AppUsers { get; set; }
 
@@ -12,6 +12,10 @@ public partial class RRContext
         modelBuilder.Entity<AppUser>(entity =>
         {
             entity.ToTable("AppUser", "identity");
+
+            entity.Property(e => e.FirstName).HasMaxLength(64);
+
+            entity.Property(e => e.LastName).HasMaxLength(64);
 
             entity.Property(e => e.ProfileImageUri).HasMaxLength(4000);
 

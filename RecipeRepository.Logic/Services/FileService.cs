@@ -6,8 +6,8 @@ public class FileService : IFileService
 {
     private class AllowedFileExtension
     {
-        public IList<string> ExtensionAliases { get; set; }
-        public IList<byte[]> Signatures { get; set; }
+        public required IList<string> ExtensionAliases { get; init; }
+        public required IList<byte[]> Signatures { get; init; }
     }
 
     // https://www.filesignatures.net/
@@ -40,7 +40,7 @@ public class FileService : IFileService
         var reader = new BinaryReader(stream); // do not dispose the stream, parent caller needs to do that!
         var allowedFileExtension = _allowedFileExtensions.FirstOrDefault(x => x.ExtensionAliases.Contains(proposedExtension));
 
-        if (allowedFileExtension == null)
+        if (allowedFileExtension is null)
             throw new IOException($"{proposedExtension} is no allowed file extension!");
 
         var headerBytes = reader.ReadBytes(allowedFileExtension.Signatures.Max(m => m.Length));
@@ -55,7 +55,7 @@ public class FileService : IFileService
             File.Delete(fileName);
     }
 
-    public async Task SaveFileToDiskAsync(Stream sourceStream, string physicalDestination, string trustedFileName)
+    public async Task SaveFileToDisk(Stream sourceStream, string physicalDestination, string trustedFileName)
     {
         if (!Directory.Exists(physicalDestination))
             Directory.CreateDirectory(physicalDestination);

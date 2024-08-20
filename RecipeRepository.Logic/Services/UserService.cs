@@ -1,16 +1,16 @@
 ﻿using AutoMapper;
 using Microsoft.Extensions.Options;
 using RecipeRandomizer.Business.Utils.Exceptions;
-using RecipeRandomizer.Business.Utils.Settings;
+using RecipeRepository.Data.Contexts;
 using RecipeRepository.Data.Repositories;
 using RecipeRepository.Logic.Infrastructure.Extensions;
+using RecipeRepository.Logic.Infrastructure.Settings;
 using RecipeRepository.Logic.Interfaces;
 using RecipeRepository.Logic.Models.Identity;
-using RRContext = RecipeRepository.Data.Contexts.RRContext;
 
 namespace RecipeRepository.Logic.Services;
 
-public class UserService(RRContext context, IMapper mapper, IOptions<AppSettings> appSettings, IFileService fileService) : IUserService
+public class UserService(RecipeRepoContext context, IMapper mapper, IOptions<AppSettings> appSettings, IFileService fileService) : IUserService
 {
     private readonly UserRepository _userRepository = new(context);
     private readonly AppSettings _appSettings = appSettings.Value;
@@ -77,7 +77,7 @@ public class UserService(RRContext context, IMapper mapper, IOptions<AppSettings
 
             // save new avatar
             var trustedFileName = Guid.NewGuid() + proposedFileExtension;
-            await fileService.SaveFileToDiskAsync(sourceStream, Path.Combine(physicalRoot, _appSettings.UserAvatarsFolder), trustedFileName);
+            await fileService.SaveFileToDisk(sourceStream, Path.Combine(physicalRoot, _appSettings.UserAvatarsFolder), trustedFileName);
 
             user.ProfileImageUri = Path.Combine(_appSettings.UserAvatarsFolder, trustedFileName);
             user.UpdatedOn = DateTime.UtcNow;

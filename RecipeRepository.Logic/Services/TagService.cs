@@ -1,13 +1,13 @@
 ﻿using AutoMapper;
+using RecipeRepository.Data.Contexts;
 using RecipeRepository.Data.Repositories;
 using RecipeRepository.Logic.Interfaces;
 using RecipeRepository.Logic.Models.Nomenclature;
-using RRContext = RecipeRepository.Data.Contexts.RRContext;
 using Entities = RecipeRepository.Data.Entities.Nomenclature;
 
 namespace RecipeRepository.Logic.Services;
 
-public class TagService(RRContext context, IMapper mapper) : ITagService
+public class TagService(RecipeRepoContext context, IMapper mapper) : ITagService
 {
     private readonly TagRepository _tagRepository = new(context);
 

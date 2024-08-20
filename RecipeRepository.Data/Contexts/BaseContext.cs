@@ -4,7 +4,7 @@ using RecipeRepository.Data.Entities;
 namespace RecipeRepository.Data.Contexts;
 
 // ReSharper disable once InconsistentNaming
-public partial class RRContext
+public partial class RecipeRepoContext
 {
     public virtual DbSet<Ingredient> Ingredients { get; set; }
     public virtual DbSet<Recipe> Recipes { get; set; }
@@ -112,7 +112,7 @@ public partial class RRContext
                 .HasConstraintName("FK_RecipeTag_Recipe");
 
             entity.HasOne(rta => rta.Tag)
-                .WithMany(t => t.RecipeTagAssociations)
+                .WithMany(t => t.RecipeTags)
                 .HasForeignKey(rta => rta.TagId)
                 .OnDelete(DeleteBehavior.Restrict)
                 .HasConstraintName("FK_RecipeTag_Tag");

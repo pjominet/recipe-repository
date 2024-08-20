@@ -1,10 +1,10 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using RecipeRepository.Data.Contexts;
 using RecipeRepository.Data.Entities.Nomenclature;
-using RRContext = RecipeRepository.Data.Contexts.RRContext;
 
 namespace RecipeRepository.Data.Repositories;
 
-public class TagRepository(RRContext context) : BaseRepository<RRContext>(context)
+public class TagRepository(RecipeRepoContext context) : BaseRepository<RecipeRepoContext>(context)
 {
     public async Task<IList<Tag>> GetTags() => await Context.Tags.ToListAsync();
 
