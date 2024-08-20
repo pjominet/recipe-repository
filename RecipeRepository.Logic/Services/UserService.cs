@@ -71,7 +71,7 @@ public class UserService(RecipeRepoContext context, IMapper mapper, IOptions<App
             fileService.CheckForAllowedSignature(sourceStream, proposedFileExtension);
 
             // delete old avatar (if any) to avoid file clutter
-            var physicalRoot = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot");
+            var physicalRoot = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot/img/profiles");
             if (user.ProfileImageUri.HasValue())
                 fileService.DeleteExistingFile(Path.Combine(physicalRoot, user.ProfileImageUri!));
 

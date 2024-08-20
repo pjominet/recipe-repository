@@ -1,15 +1,17 @@
-﻿using Microsoft.AspNetCore.Identity;
+﻿using System.Text;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Diagnostics;
+using Microsoft.IdentityModel.Tokens;
 using RecipeRepository.Data.Contexts;
 using RecipeRepository.Logic.Infrastructure.Extensions;
-using RecipeRepository.Logic.Infrastructure.Factories;
 using RecipeRepository.Logic.Infrastructure.Settings;
 using RecipeRepository.Logic.Interfaces;
 using RecipeRepository.Logic.Services;
 using AppUser = RecipeRepository.Data.Entities.Identity.AppUser;
 
-namespace RecipeRepository.Web;
+namespace RecipeRepository.Api;
 
 public static class ServiceCollectionExtensions
 {
@@ -29,31 +31,35 @@ public static class ServiceCollectionExtensions
     public static void AddSettings(this IServiceCollection services, IConfiguration configuration)
     {
         services.Configure<AppSettings>(configuration.GetSection(nameof(AppSettings)));
+        services.Configure<JwtSettings>(configuration.GetSection(nameof(JwtSettings)));
         services.Configure<EmailSettings>(configuration.GetSection(nameof(EmailSettings)));
     }
 
-    public static void AddAuthentication(this IServiceCollection services)
+    public static void AddAuthentication(this IServiceCollection services, IConfiguration configuration)
     {
-        services.AddIdentity<AppUser, IdentityRole>(options =>
+        services
+            .AddIdentity<AppUser, IdentityRole>()
+            .AddEntityFrameworkStores<RecipeRepoContext>();
+
+        services
+            .AddAuthentication(options =>
             {
-#if DEBUG
-                options.Password.RequiredLength = 6;
-                options.Password.RequireLowercase = true;
-                options.Password.RequireUppercase = false;
-                options.Password.RequireNonAlphanumeric = false;
-                options.Password.RequireDigit = false;
-                options.Password.RequiredUniqueChars = 0;
-#else
-                options.Password.RequiredLength = 8;
-                options.Password.RequireLowercase = true;
-                options.Password.RequireUppercase = true;
-                options.Password.RequireNonAlphanumeric = true;
-                options.Password.RequireDigit = true;
-                options.Password.RequiredUniqueChars = 0;
-#endif
-            }).AddEntityFrameworkStores<RecipeRepoContext>()
-            .AddClaimsPrincipalFactory<AppUserClaimsFactory>()
-            .AddDefaultTokenProviders();
+                options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+                options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+            })
+            .AddJwtBearer(options =>
+            {
+                options.TokenValidationParameters = new TokenValidationParameters
+                {
+                    ValidateIssuer = true,
+                    ValidateAudience = true,
+                    ValidateLifetime = true,
+                    ValidateIssuerSigningKey = true,
+                    ValidIssuer = configuration.GetSection("JwtSettings:Issuer").Value,
+                    ValidAudience = configuration.GetSection("JwtSettings:Audience").Value,
+                    IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(configuration.GetSection("JwtSettings:Secret").Value!))
+                };
+            });
     }
 
     public static void AddAppServices(this IServiceCollection services)
@@ -61,6 +67,7 @@ public static class ServiceCollectionExtensions
         services.AddTransient<IEmailService, EmailService>();
         services.AddTransient<IFileService, FileService>();
 
+        services.AddScoped<IAuthService, AuthService>();
         services.AddScoped<IQuantityService, QuantityService>();
         services.AddScoped<IRecipeService, RecipeService>();
         services.AddScoped<ITagService, TagService>();

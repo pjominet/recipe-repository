@@ -1,4 +1,4 @@
-using RecipeRepository.Web;
+using RecipeRepository.Api;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -11,6 +11,6 @@ startup.ConfigureServices(builder.Services);
 
 var app = builder.Build();
 
-Startup.Configure(app);
+startup.Configure(app);
 
 app.Run();

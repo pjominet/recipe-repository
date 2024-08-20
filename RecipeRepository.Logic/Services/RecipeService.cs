@@ -75,7 +75,7 @@ public class RecipeService(RecipeRepoContext context, IMapper mapper, IOptions<A
             fileService.CheckForAllowedSignature(sourceStream, proposedFileExtension);
 
             // delete old recipe image (if any) to avoid file clutter
-            var physicalRoot = Path.Combine(Directory.GetCurrentDirectory(), @"wwwroot");
+            var physicalRoot = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot/img/recipes");
             if(!string.IsNullOrWhiteSpace(recipe.ImageUri))
                 fileService.DeleteExistingFile(Path.Combine(physicalRoot, recipe.ImageUri));
 

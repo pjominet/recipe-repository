@@ -1,6 +1,6 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RecipeRepository.Web", "RecipeRepository.Web\RecipeRepository.Web.csproj", "{C59A9A48-ABB9-4281-BB4C-70774A36D9F8}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RecipeRepository.Api", "RecipeRepository.Api\RecipeRepository.Api.csproj", "{C59A9A48-ABB9-4281-BB4C-70774A36D9F8}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RecipeRepository.Logic", "RecipeRepository.Logic\RecipeRepository.Logic.csproj", "{F2793544-2134-4C78-9E4C-72A792183C98}"
 EndProject
