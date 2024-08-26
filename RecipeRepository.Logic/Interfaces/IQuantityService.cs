@@ -4,5 +4,5 @@ namespace RecipeRepository.Logic.Interfaces;
 
 public interface IQuantityService
 {
-    public Task<IEnumerable<QuantityUnit>> GetQuantityUnitsAsync();
+    public Task<IEnumerable<QuantityUnit>> GetQuantityUnits();
 }

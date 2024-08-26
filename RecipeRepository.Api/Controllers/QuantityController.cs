@@ -12,6 +12,6 @@ public class QuantityController(IQuantityService quantityService) : ApiControlle
     [ProducesResponseType(typeof(IEnumerable<QuantityUnit>), StatusCodes.Status200OK)]
     public async Task<ActionResult<IEnumerable<QuantityUnit>>> GetQuantityUnits()
     {
-        return Ok(await quantityService.GetQuantityUnitsAsync());
+        return Ok(await quantityService.GetQuantityUnits());
     }
 }

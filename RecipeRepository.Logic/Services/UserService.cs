@@ -44,21 +44,6 @@ public class UserService(RecipeRepoContext context, IMapper mapper, IOptions<App
         return mapper.Map<AppUser>(user);
     }
 
-    public async Task<AppUser> Update(string id, RoleUpdateRequest roleUpdateRequest)
-    {
-        var user = await _userRepository.GetUser(id);
-
-        if (user is null)
-            throw new KeyNotFoundException("AppUser not found");
-
-        // update role
-        user.UpdatedOn = DateTime.UtcNow;
-        if (!await _userRepository.SaveChangesAsync())
-            throw new ApplicationException("Database error: Changes could not be saved correctly");
-
-        return mapper.Map<AppUser>(user);
-    }
-
     public async Task<bool> UploadUserAvatar(Stream sourceStream, string untrustedFileName, string id)
     {
         var user = await _userRepository.GetUser(id);

@@ -11,6 +11,6 @@ public class QuantityService(RecipeRepoContext context, IMapper mapper) : IQuant
 
     private readonly QuantityRepository _quantityRepository = new(context);
 
-    public async Task<IEnumerable<QuantityUnit>> GetQuantityUnitsAsync()
+    public async Task<IEnumerable<QuantityUnit>> GetQuantityUnits()
         => mapper.Map<IEnumerable<QuantityUnit>>(await _quantityRepository.GetQunatityUnits());
 }

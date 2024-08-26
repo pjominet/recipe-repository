@@ -53,7 +53,7 @@ public class RecipeController(IRecipeService recipeService) : ApiController
     public async Task<ActionResult<Recipe>> GetRecipe([FromRoute] int id)
     {
         var recipe = await recipeService.GetRecipe(id);
-        return recipe != null
+        return recipe is not null
             ? Ok(recipe)
             : NotFound();
     }
@@ -98,9 +98,9 @@ public class RecipeController(IRecipeService recipeService) : ApiController
     public async Task<ActionResult<Recipe>> AddRecipe([FromBody] Recipe recipe)
     {
         var newRecipe = await recipeService.CreateRecipe(recipe);
-        return newRecipe != null
-            ? CreatedAtAction(nameof(GetRecipe), new {id = newRecipe.Id}, newRecipe)
-            : (ActionResult) StatusCode(StatusCodes.Status500InternalServerError);
+        return newRecipe is not null
+            ? CreatedAtAction(nameof(GetRecipe), new { id = newRecipe.Id }, newRecipe)
+            : StatusCode(StatusCodes.Status500InternalServerError);
     }
 
     [Authorize]
@@ -145,7 +145,7 @@ public class RecipeController(IRecipeService recipeService) : ApiController
     {
         var restoredRecipe = await recipeService.RestoreDeletedRecipe(id);
 
-        return restoredRecipe != null
+        return restoredRecipe is not null
             ? Ok(restoredRecipe)
             : NotFound();
     }

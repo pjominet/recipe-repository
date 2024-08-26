@@ -45,14 +45,6 @@ public class UserController(IUserService userService) : ApiController
         return Ok(await userService.Update(id, userUpdateRequest));
     }
 
-    [HttpPut("{id}/role")]
-    [ProducesResponseType(StatusCodes.Status204NoContent)]
-    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
-    public async Task<IActionResult> UpdateUserRole([FromRoute] string id, [FromBody] RoleUpdateRequest roleUpdateRequest)
-    {
-        return Ok(await userService.Update(id, roleUpdateRequest));
-    }
-
     [HttpPost("image-upload")]
     [Consumes("multipart/form-data")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
@@ -64,7 +56,7 @@ public class UserController(IUserService userService) : ApiController
             return BadRequest("Missing information");
 
         if (image.Length > 2097152) // > 2MB
-            return BadRequest("File is too large");
+            return BadRequest("File is too large (> 2MB)");
 
         var stream = image.OpenReadStream();
         var result = await userService.UploadUserAvatar(stream, image.FileName, userId!);

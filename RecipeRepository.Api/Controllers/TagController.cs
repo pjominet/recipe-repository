@@ -21,20 +21,20 @@ public class TagController(ITagService tagService) : ApiController
     public async Task<ActionResult<Task>> GetTag([FromRoute] int id)
     {
         var tag = await tagService.GetTag(id);
-        return tag != null
+        return tag is not null
             ? Ok(tag)
             : NotFound();
     }
 
     [HttpPost]
     [Consumes("application/json")]
-    [ProducesResponseType(typeof(Tag),StatusCodes.Status201Created)]
+    [ProducesResponseType(typeof(Tag), StatusCodes.Status201Created)]
     [ProducesResponseType(StatusCodes.Status500InternalServerError)]
     public async Task<ActionResult<Tag>> AddTag([FromBody] Tag tag)
     {
         var newTag = await tagService.CreateTag(tag);
-        return newTag != null
-            ? CreatedAtAction(nameof(GetTag), new {id = newTag.Id}, newTag)
+        return newTag is not null
+            ? CreatedAtAction(nameof(GetTag), new { id = newTag.Id }, newTag)
             : StatusCode(StatusCodes.Status500InternalServerError);
     }
 
@@ -76,7 +76,7 @@ public class TagController(ITagService tagService) : ApiController
     public async Task<ActionResult<TagCategory>> GetTagCategory([FromRoute] int id)
     {
         var tagCategory = await tagService.GetTagCategory(id);
-        return tagCategory != null
+        return tagCategory is not null
             ? Ok(tagCategory)
             : NotFound();
     }
