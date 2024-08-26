@@ -1,4 +1,5 @@
 ﻿using RecipeRepository.Logic;
+using Swashbuckle.AspNetCore.SwaggerUI;
 
 namespace RecipeRepository.Api;
 
@@ -48,6 +49,7 @@ public class Startup(IConfiguration configuration, ILogger logger)
         {
             options.DefaultModelsExpandDepth(-1);
             options.DefaultModelExpandDepth(-1);
+            options.DefaultModelRendering(ModelRendering.Model);
             options.SwaggerEndpoint($"/swagger/v{majorVersion}/swagger.json", $"Recipe Repository v{majorVersion}");
         });
 

@@ -11,6 +11,7 @@ namespace RecipeRepository.Api.Controllers;
 public class TagController(ITagService tagService) : ApiController
 {
     [HttpGet]
+    [Produces("application/json")]
     [ProducesResponseType(typeof(IEnumerable<Tag>), StatusCodes.Status200OK)]
     public async Task<ActionResult<IEnumerable<Tag>>> GetTags()
     {
@@ -18,6 +19,7 @@ public class TagController(ITagService tagService) : ApiController
     }
 
     [HttpGet("{id:int}")]
+    [Produces("application/json")]
     [ProducesResponseType(typeof(Tag), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
     public async Task<ActionResult<Task>> GetTag([FromRoute] int id)
@@ -66,6 +68,7 @@ public class TagController(ITagService tagService) : ApiController
     }
 
     [HttpGet("categories")]
+    [Produces("application/json")]
     [ProducesResponseType(typeof(IEnumerable<TagCategory>), StatusCodes.Status200OK)]
     public async Task<ActionResult<IEnumerable<TagCategory>>> GetTagCategories()
     {
@@ -73,6 +76,7 @@ public class TagController(ITagService tagService) : ApiController
     }
 
     [HttpGet("categories/{id:int}")]
+    [Produces("application/json")]
     [ProducesResponseType(typeof(TagCategory), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
     public async Task<ActionResult<TagCategory>> GetTagCategory([FromRoute] int id)

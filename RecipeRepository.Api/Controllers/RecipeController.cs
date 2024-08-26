@@ -12,6 +12,7 @@ public class RecipeController(IRecipeService recipeService) : ApiController
 {
     [HttpGet]
     [AllowAnonymous]
+    [Produces("application/json")]
     [ProducesResponseType(typeof(IEnumerable<Recipe>), StatusCodes.Status200OK)]
     public async Task<ActionResult<IEnumerable<Recipe>>> GetRecipes([FromQuery(Name = "tag")] int[] tagIds)
     {
@@ -20,6 +21,7 @@ public class RecipeController(IRecipeService recipeService) : ApiController
 
     [HttpGet("published/count")]
     [AllowAnonymous]
+    [Produces("application/json")]
     [ProducesResponseType(typeof(int), StatusCodes.Status200OK)]
     public async Task<ActionResult<int>> GetPublishedRecipeCount()
     {
@@ -27,6 +29,7 @@ public class RecipeController(IRecipeService recipeService) : ApiController
     }
 
     [HttpGet("created/{id}")]
+    [Produces("application/json")]
     [ProducesResponseType(typeof(IEnumerable<Recipe>), StatusCodes.Status200OK)]
     public async Task<ActionResult<IEnumerable<Recipe>>> GetRecipesForUser([FromRoute(Name = "id")] string id)
     {
@@ -34,6 +37,7 @@ public class RecipeController(IRecipeService recipeService) : ApiController
     }
 
     [HttpGet("liked/{id}")]
+    [Produces("application/json")]
     [ProducesResponseType(typeof(IEnumerable<Recipe>), StatusCodes.Status200OK)]
     public async Task<ActionResult<IEnumerable<Recipe>>> GetLikedRecipesForUser([FromRoute(Name = "id")] string id)
     {
@@ -41,6 +45,7 @@ public class RecipeController(IRecipeService recipeService) : ApiController
     }
 
     [HttpGet("deleted")]
+    [Produces("application/json")]
     [ProducesResponseType(typeof(IEnumerable<Recipe>), StatusCodes.Status200OK)]
     public async Task<ActionResult<IEnumerable<Recipe>>> GetDeletedRecipes()
     {
@@ -48,6 +53,7 @@ public class RecipeController(IRecipeService recipeService) : ApiController
     }
 
     [HttpGet("{id:int}")]
+    [Produces("application/json")]
     [ProducesResponseType(typeof(Recipe), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
     public async Task<ActionResult<Recipe>> GetRecipe([FromRoute] int id)
@@ -59,6 +65,7 @@ public class RecipeController(IRecipeService recipeService) : ApiController
     }
 
     [HttpGet("random")]
+    [Produces("application/json")]
     [ProducesResponseType(typeof(Recipe), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
     public async Task<ActionResult<Recipe>> GetRandomRecipe([FromQuery(Name = "tag")] int[] tagIds)
@@ -70,6 +77,7 @@ public class RecipeController(IRecipeService recipeService) : ApiController
     }
 
     [HttpGet("abandoned")]
+    [Produces("application/json")]
     [ProducesResponseType(typeof(IEnumerable<Recipe>), StatusCodes.Status200OK)]
     public async Task<ActionResult<IEnumerable<Recipe>>> GetAbandonedRecipes()
     {
@@ -77,6 +85,7 @@ public class RecipeController(IRecipeService recipeService) : ApiController
     }
 
     [HttpPost("abandoned")]
+    [Produces("application/json")]
     [Consumes("application/json")]
     [ProducesResponseType(typeof(IEnumerable<Recipe>), StatusCodes.Status204NoContent)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
@@ -92,6 +101,7 @@ public class RecipeController(IRecipeService recipeService) : ApiController
     }
 
     [HttpPost]
+    [Produces("application/json")]
     [Consumes("application/json")]
     [ProducesResponseType(typeof(Recipe), StatusCodes.Status201Created)]
     [ProducesResponseType(StatusCodes.Status500InternalServerError)]
@@ -144,6 +154,7 @@ public class RecipeController(IRecipeService recipeService) : ApiController
     }
 
     [HttpGet("restore/{id:int}")]
+    [Produces("application/json")]
     [ProducesResponseType(typeof(Recipe), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status500InternalServerError)]
@@ -171,6 +182,7 @@ public class RecipeController(IRecipeService recipeService) : ApiController
 
     [HttpPut]
     [Consumes("application/json")]
+    [Produces("application/json")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status500InternalServerError)]
     public async Task<IActionResult> EditRecipe([FromBody] Recipe recipe)

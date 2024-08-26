@@ -13,6 +13,7 @@ namespace RecipeRepository.Api.Controllers;
 public class UserController(IUserService userService) : ApiController
 {
     [HttpGet]
+    [Produces("application/json")]
     [ProducesResponseType(typeof(IEnumerable<AppUser>), StatusCodes.Status200OK)]
     public async Task<ActionResult<IEnumerable<AppUser>>> GetUsers()
     {
@@ -20,6 +21,7 @@ public class UserController(IUserService userService) : ApiController
     }
 
     [HttpGet("{id}")]
+    [Produces("application/json")]
     [ProducesResponseType(typeof(AppUser), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status403Forbidden)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
@@ -36,6 +38,7 @@ public class UserController(IUserService userService) : ApiController
     }
 
     [HttpPut("{id}")]
+    [Produces("application/json")]
     [ProducesResponseType(typeof(AppUser), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status403Forbidden)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]

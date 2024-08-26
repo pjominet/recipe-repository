@@ -11,6 +11,7 @@ namespace RecipeRepository.Api.Controllers;
 public class QuantityController(IQuantityService quantityService) : ApiController
 {
     [HttpGet("units")]
+    [Produces("application/json")]
     [ProducesResponseType(typeof(IEnumerable<QuantityUnit>), StatusCodes.Status200OK)]
     public async Task<ActionResult<IEnumerable<QuantityUnit>>> GetQuantityUnits()
     {
