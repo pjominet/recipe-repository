@@ -1,14 +1,17 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using RecipeRepository.Api.Infrastructure;
 using RecipeRepository.Logic.Interfaces;
 using RecipeRepository.Logic.Models;
 
 namespace RecipeRepository.Api.Controllers;
 
+[Authorize]
 [Route("recipes")]
 public class RecipeController(IRecipeService recipeService) : ApiController
 {
     [HttpGet]
+    [AllowAnonymous]
     [ProducesResponseType(typeof(IEnumerable<Recipe>), StatusCodes.Status200OK)]
     public async Task<ActionResult<IEnumerable<Recipe>>> GetRecipes([FromQuery(Name = "tag")] int[] tagIds)
     {
@@ -16,13 +19,13 @@ public class RecipeController(IRecipeService recipeService) : ApiController
     }
 
     [HttpGet("published-count")]
+    [AllowAnonymous]
     [ProducesResponseType(typeof(int), StatusCodes.Status200OK)]
     public async Task<ActionResult<int>> GetPublishedRecipeCount()
     {
         return Ok(await recipeService.GetPublishedRecipeCount());
     }
 
-    [Authorize]
     [HttpGet("created/{id}")]
     [ProducesResponseType(typeof(IEnumerable<Recipe>), StatusCodes.Status200OK)]
     public async Task<ActionResult<IEnumerable<Recipe>>> GetRecipesForUser([FromRoute(Name = "id")] string id)
@@ -30,7 +33,6 @@ public class RecipeController(IRecipeService recipeService) : ApiController
         return Ok(await recipeService.GetUserRecipes(id));
     }
 
-    [Authorize]
     [HttpGet("liked/{id}")]
     [ProducesResponseType(typeof(IEnumerable<Recipe>), StatusCodes.Status200OK)]
     public async Task<ActionResult<IEnumerable<Recipe>>> GetLikedRecipesForUser([FromRoute(Name = "id")] string id)
@@ -38,7 +40,6 @@ public class RecipeController(IRecipeService recipeService) : ApiController
         return Ok(await recipeService.GetUserLikedRecipes(id));
     }
 
-    [Authorize]
     [HttpGet("deleted")]
     [ProducesResponseType(typeof(IEnumerable<Recipe>), StatusCodes.Status200OK)]
     public async Task<ActionResult<IEnumerable<Recipe>>> GetDeletedRecipes()
@@ -46,10 +47,9 @@ public class RecipeController(IRecipeService recipeService) : ApiController
         return Ok(await recipeService.GetDeletedRecipes());
     }
 
-    [Authorize]
     [HttpGet("{id:int}")]
     [ProducesResponseType(typeof(Recipe), StatusCodes.Status200OK)]
-    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
     public async Task<ActionResult<Recipe>> GetRecipe([FromRoute] int id)
     {
         var recipe = await recipeService.GetRecipe(id);
@@ -58,10 +58,9 @@ public class RecipeController(IRecipeService recipeService) : ApiController
             : NotFound();
     }
 
-    [Authorize]
     [HttpGet("random")]
     [ProducesResponseType(typeof(Recipe), StatusCodes.Status200OK)]
-    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
     public async Task<ActionResult<Recipe>> GetRandomRecipe([FromQuery(Name = "tag")] int[] tagIds)
     {
         var recipeId = await recipeService.GetRandomRecipeId(tagIds);
@@ -70,7 +69,6 @@ public class RecipeController(IRecipeService recipeService) : ApiController
             : NotFound();
     }
 
-    [Authorize]
     [HttpGet("abandoned")]
     [ProducesResponseType(typeof(IEnumerable<Recipe>), StatusCodes.Status200OK)]
     public async Task<ActionResult<IEnumerable<Recipe>>> GetAbandonedRecipes()
@@ -78,37 +76,40 @@ public class RecipeController(IRecipeService recipeService) : ApiController
         return Ok(await recipeService.GetAbandonedRecipes());
     }
 
-    [Authorize]
     [HttpPost("abandoned")]
     [Consumes("application/json")]
     [ProducesResponseType(typeof(IEnumerable<Recipe>), StatusCodes.Status204NoContent)]
-    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
-    public async Task<ActionResult<IEnumerable<Recipe>>> AttributeRecipe([FromBody] AttributionRequest request)
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status500InternalServerError)]
+    public async Task<IActionResult> AttributeRecipe([FromBody] AttributionRequest request)
     {
-        return await recipeService.AttributeRecipe(request)
-            ? NoContent()
-            : StatusCode(StatusCodes.Status500InternalServerError);
+        var result = await recipeService.AttributeRecipe(request);
+        return result.Match(
+            IActionResult (_) => NoContent(),
+            notFound => NotFound(notFound.Message),
+            error => Problem(error.Message, HttpContext.TraceIdentifier, StatusCodes.Status500InternalServerError, "Recipe Attribution Error", RfcTypeRef.Ref500)
+        );
     }
 
-    [Authorize]
     [HttpPost]
     [Consumes("application/json")]
     [ProducesResponseType(typeof(Recipe), StatusCodes.Status201Created)]
     [ProducesResponseType(StatusCodes.Status500InternalServerError)]
     public async Task<ActionResult<Recipe>> AddRecipe([FromBody] Recipe recipe)
     {
-        var newRecipe = await recipeService.CreateRecipe(recipe);
-        return newRecipe is not null
-            ? CreatedAtAction(nameof(GetRecipe), new { id = newRecipe.Id }, newRecipe)
-            : StatusCode(StatusCodes.Status500InternalServerError);
+        var result = await recipeService.CreateRecipe(recipe);
+        return result.Match(
+            newRecipe => CreatedAtAction(nameof(GetRecipe), new { id = newRecipe.Id }, newRecipe),
+            error => Problem(error.Message, HttpContext.TraceIdentifier, StatusCodes.Status500InternalServerError, "Recipe Creation Error", RfcTypeRef.Ref500)
+        );
     }
 
-    [Authorize]
     [HttpPost("image-upload")]
     [Consumes("multipart/form-data")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
-    [ProducesResponseType(StatusCodes.Status400BadRequest)]
-    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status500InternalServerError)]
     public async Task<IActionResult> UploadRecipeImage([FromForm(Name = "file")] IFormFile image, [FromForm(Name = "id")] int? recipeId)
     {
         if (image is not { Length: > 0 } || !recipeId.HasValue)
@@ -121,55 +122,64 @@ public class RecipeController(IRecipeService recipeService) : ApiController
         var result = await recipeService.UploadRecipeImage(stream, image.FileName, recipeId.Value);
         stream.Close();
 
-        return result
-            ? NoContent()
-            : StatusCode(StatusCodes.Status500InternalServerError);
+        return result.Match(
+            IActionResult (_) => NoContent(),
+            notFound => NotFound(notFound.Message),
+            error => Problem(error.Message, HttpContext.TraceIdentifier, StatusCodes.Status500InternalServerError, "Image Upload Error", RfcTypeRef.Ref500)
+        );
     }
 
-    [Authorize]
     [HttpDelete("{id:int}")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
-    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status500InternalServerError)]
     public async Task<IActionResult> DeleteRecipe([FromRoute] int id, [FromQuery(Name = "hard")] bool hard = false)
     {
-        return await recipeService.DeleteRecipe(id, hard)
-            ? NoContent()
-            : NotFound();
+        var result = await recipeService.DeleteRecipe(id, hard);
+        return result.Match(
+            IActionResult (_) => NoContent(),
+            notFound => NotFound(notFound.Message),
+            error => Problem(error.Message, HttpContext.TraceIdentifier, StatusCodes.Status500InternalServerError, "Image Upload Error", RfcTypeRef.Ref500)
+        );
     }
 
-    [Authorize]
     [HttpGet("restore/{id:int}")]
     [ProducesResponseType(typeof(Recipe), StatusCodes.Status200OK)]
-    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status500InternalServerError)]
     public async Task<ActionResult<Recipe>> RestoreDeletedRecipe([FromRoute] int id)
     {
-        var restoredRecipe = await recipeService.RestoreDeletedRecipe(id);
-
-        return restoredRecipe is not null
-            ? Ok(restoredRecipe)
-            : NotFound();
+        var result = await recipeService.RestoreDeletedRecipe(id);
+        return result.Match(
+            Ok,
+            notFound => NotFound(notFound.Message),
+            error => Problem(error.Message, HttpContext.TraceIdentifier, StatusCodes.Status500InternalServerError, "Recipe Restore Error", RfcTypeRef.Ref500)
+        );
     }
 
-    [Authorize]
     [HttpPost("like/{recipeId:int}")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status500InternalServerError)]
     public async Task<IActionResult> ToggleRecipeLike([FromRoute(Name = "recipeId")] int recipeId, [FromBody] LikeRequest request)
     {
-        return await recipeService.ToggleRecipeLike(recipeId, request)
-            ? NoContent()
-            : StatusCode(StatusCodes.Status500InternalServerError);
+        var result = await recipeService.ToggleRecipeLike(recipeId, request);
+        return result.Match(
+            IActionResult (_) => NoContent(),
+            error => Problem(error.Message, HttpContext.TraceIdentifier, StatusCodes.Status500InternalServerError, "Toggle Like Error", RfcTypeRef.Ref500)
+        );
     }
 
-    [Authorize]
     [HttpPut]
     [Consumes("application/json")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status500InternalServerError)]
     public async Task<IActionResult> EditRecipe([FromBody] Recipe recipe)
     {
-        return await recipeService.UpdateRecipe(recipe)
-            ? Ok(recipe.Id)
-            : StatusCode(StatusCodes.Status500InternalServerError);
+        var result = await recipeService.UpdateRecipe(recipe);
+        return result.Match(
+            Ok,
+            found => NotFound(found.Message),
+            error => Problem(error.Message, HttpContext.TraceIdentifier, StatusCodes.Status500InternalServerError, "Edit Recipe Error", RfcTypeRef.Ref500)
+        );
     }
 }

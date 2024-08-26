@@ -1,4 +1,6 @@
-﻿using RecipeRepository.Logic.Models;
+﻿using OneOf;
+using RecipeRepository.Logic.Infrastructure.OneOfResults;
+using RecipeRepository.Logic.Models;
 
 namespace RecipeRepository.Logic.Interfaces;
 
@@ -12,11 +14,11 @@ public interface IRecipeService
     public Task<int?> GetRandomRecipeId(IList<int> tagIds);
     public Task<IEnumerable<Recipe>> GetUserRecipes(string userId);
     public Task<IEnumerable<Recipe>> GetUserLikedRecipes(string userId);
-    public Task<Recipe?> CreateRecipe(Recipe recipe);
-    public Task<bool> UploadRecipeImage(Stream sourceStream, string untrustedFileName, int id);
-    public Task<bool> UpdateRecipe(Recipe recipe);
-    public Task<bool> DeleteRecipe(int id, bool hard = false);
-    public Task<Recipe?> RestoreDeletedRecipe(int id);
-    public Task<bool> ToggleRecipeLike(int recipeId, LikeRequest request);
-    public Task<bool> AttributeRecipe(AttributionRequest request);
+    public Task<OneOf<Recipe, Error>> CreateRecipe(Recipe recipe);
+    public Task<OneOf<Success, NotFound, Error>> UploadRecipeImage(Stream sourceStream, string untrustedFileName, int id);
+    public Task<OneOf<Success, NotFound, Error>> UpdateRecipe(Recipe recipe);
+    public Task<OneOf<Success, NotFound, Error>> DeleteRecipe(int id, bool hard = false);
+    public Task<OneOf<Recipe, NotFound, Error>> RestoreDeletedRecipe(int id);
+    public Task<OneOf<Success, Error>> ToggleRecipeLike(int recipeId, LikeRequest request);
+    public Task<OneOf<Success, NotFound, Error>> AttributeRecipe(AttributionRequest request);
 }

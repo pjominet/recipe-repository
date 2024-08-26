@@ -1,6 +1,6 @@
 ﻿namespace RecipeRepository.Logic.Infrastructure.Identity;
 
-public class RecipeRepoIdentityClaims
+public abstract class CustomIdentityClaims
 {
     private const string Prefix = "RR.";
 

@@ -17,9 +17,9 @@ public class AppUserClaimsFactory(
     {
         var identity = await base.GenerateClaimsAsync(user);
 
-        _ = identity.TryAddClaim(RecipeRepoIdentityClaims.Name, $"{user.FirstName} {user.LastName}");
-        _ = identity.TryAddClaim(RecipeRepoIdentityClaims.Email, user.Email!);
-        _ = identity.TryAddClaim(RecipeRepoIdentityClaims.Guid, $"{user.Id}");
+        _ = identity.TryAddClaim(CustomIdentityClaims.Name, $"{user.FirstName} {user.LastName}");
+        _ = identity.TryAddClaim(CustomIdentityClaims.Email, user.Email!);
+        _ = identity.TryAddClaim(CustomIdentityClaims.Guid, $"{user.Id}");
 
         return identity;
     }

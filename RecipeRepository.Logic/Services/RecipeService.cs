@@ -1,17 +1,17 @@
 ﻿using AutoMapper;
+using OneOf;
 using Microsoft.Extensions.Options;
-using RecipeRandomizer.Business.Utils.Exceptions;
 using RecipeRepository.Data.Contexts;
-using RecipeRepository.Data.Entities;
+using RecipeRepository.Logic.Infrastructure.Extensions;
+using RecipeRepository.Logic.Infrastructure.OneOfResults;
 using RecipeRepository.Logic.Infrastructure.Settings;
 using RecipeRepository.Logic.Interfaces;
 using RecipeRepository.Logic.Models;
-using Recipe = RecipeRepository.Logic.Models.Recipe;
+using Entities = RecipeRepository.Data.Entities;
 
 namespace RecipeRepository.Logic.Services;
 
-public class RecipeService(RecipeRepoContext context, IMapper mapper, IOptions<AppSettings> appSettings, IFileService fileService)
-    : IRecipeService
+public class RecipeService(RecipeRepoContext context, IMapper mapper, IOptions<AppSettings> appSettings, IFileService fileService) : IRecipeService
 {
     private readonly Data.Repositories.RecipeRepository _recipeRepository = new(context);
     private readonly AppSettings _appSettings = appSettings.Value;
@@ -44,30 +44,43 @@ public class RecipeService(RecipeRepoContext context, IMapper mapper, IOptions<A
     public async Task<IEnumerable<Recipe>> GetUserLikedRecipes(string userId)
         => mapper.Map<IEnumerable<Recipe>>(await _recipeRepository.GetUserLikedRecipes(userId));
 
-    public async Task<Recipe?> CreateRecipe(Recipe recipe)
+    public async Task<OneOf<Recipe, Error>> CreateRecipe(Recipe recipe)
     {
-        var newRecipe = mapper.Map<Recipe>(recipe);
-        newRecipe.CreatedOn = DateTime.UtcNow;
-        newRecipe.UpdatedOn = DateTime.UtcNow;
+        var newRecipe = new Entities.Recipe
+        {
+            UserId = recipe.UserId,
+            Name = recipe.Name,
+            Description = recipe.Description,
+            NumberOfPeople = recipe.NumberOfPeople,
+            CostId = (int)recipe.Cost,
+            DifficultyId = (int)recipe.Difficulty,
+            PrepTime = recipe.PrepTime,
+            CookTime = recipe.CookTime,
+            Preparation = recipe.Preparation,
+            CreatedOn = DateTime.UtcNow,
+            UpdatedOn = DateTime.UtcNow
+        };
 
         _recipeRepository.Insert(newRecipe);
-        var result = await _recipeRepository.SaveChangesAsync();
 
-        if (!result)
-            return null;
+        if (await _recipeRepository.SaveChangesAsync())
+            return new Error("Recipe could not be persisted!");
 
         foreach (var tag in recipe.Tags)
-            _recipeRepository.Insert(new RecipeTags {TagId = tag.Id, RecipeId = newRecipe.Id});
+            _recipeRepository.Insert(new Entities.RecipeTags { TagId = tag.Id, RecipeId = newRecipe.Id });
 
-        result &= await _recipeRepository.SaveChangesAsync();
-        return result ? mapper.Map<Recipe>(newRecipe) : null;
+        if (await _recipeRepository.SaveChangesAsync())
+            return new Error("Recipe tags could not be persisted!");
+
+        recipe.Id = newRecipe.Id;
+        return recipe;
     }
 
-    public async Task<bool> UploadRecipeImage(Stream sourceStream, string untrustedFileName, int id)
+    public async Task<OneOf<Success, NotFound, Error>> UploadRecipeImage(Stream sourceStream, string untrustedFileName, int id)
     {
         var recipe = await _recipeRepository.GetRecipe(id);
         if (recipe is null)
-            throw new KeyNotFoundException("Recipe to add image to could not be found");
+            return new NotFound("Recipe does not exist!");
 
         try
         {
@@ -75,38 +88,43 @@ public class RecipeService(RecipeRepoContext context, IMapper mapper, IOptions<A
             fileService.CheckForAllowedSignature(sourceStream, proposedFileExtension);
 
             // delete old recipe image (if any) to avoid file clutter
-            var physicalRoot = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot/img/recipes");
-            if(!string.IsNullOrWhiteSpace(recipe.ImageUri))
-                fileService.DeleteExistingFile(Path.Combine(physicalRoot, recipe.ImageUri));
+            var physicalRoot = Path.Combine(Directory.GetCurrentDirectory(), _appSettings.RecipeImagesFolder);
+            if (recipe.ImageUri.HasValue())
+                fileService.DeleteExistingFile(Path.Combine(physicalRoot, recipe.ImageUri!));
 
             // save new recipe image
             var trustedFileName = Guid.NewGuid() + proposedFileExtension;
-            await fileService.SaveFileToDisk(sourceStream, Path.Combine(physicalRoot, _appSettings.UserAvatarsFolder), trustedFileName);
+            await fileService.SaveFileToDisk(sourceStream, Path.Combine(physicalRoot, _appSettings.RecipeImagesFolder), trustedFileName);
 
             recipe.ImageUri = Path.Combine(_appSettings.RecipeImagesFolder, trustedFileName);
             recipe.OriginalImageName = untrustedFileName;
             recipe.UpdatedOn = DateTime.UtcNow;
-            return await _recipeRepository.SaveChangesAsync();
+
+            return !await _recipeRepository.SaveChangesAsync()
+                ? new Error("Recipe changes could not be persisted!")
+                : new Success();
         }
         catch (IOException e)
         {
-            Console.WriteLine(e);
-            throw new BadRequestException(e.Message);
+            return new Error(e.Message);
         }
     }
 
-    public async Task<bool> UpdateRecipe(Recipe recipe)
+    public async Task<OneOf<Success, NotFound, Error>> UpdateRecipe(Recipe recipe)
     {
         var existingRecipe = await _recipeRepository.GetRecipe(recipe.Id, true);
         if (existingRecipe is null)
-            return false;
+            return new NotFound("Requested recipe does not exist!");
 
         mapper.Map(recipe, existingRecipe);
         existingRecipe.UpdatedOn = DateTime.UtcNow;
-        return await _recipeRepository.SaveChangesAsync();
+
+        return !await _recipeRepository.SaveChangesAsync()
+            ? new Error("Recipe changes could not be persisted!")
+            : new Success();
     }
 
-    public async Task<bool> DeleteRecipe(int id, bool hard = false)
+    public async Task<OneOf<Success, NotFound, Error>> DeleteRecipe(int id, bool hard = false)
     {
         if (hard)
             _recipeRepository.HardDeleteRecipe(id);
@@ -114,30 +132,34 @@ public class RecipeService(RecipeRepoContext context, IMapper mapper, IOptions<A
         {
             var recipeToDelete = await _recipeRepository.GetRecipe(id);
             if (recipeToDelete is null)
-                return false;
+                return new NotFound("Requested recipe does not exist!");
 
             recipeToDelete.DeletedOn = DateTime.UtcNow;
         }
 
-        return await _recipeRepository.SaveChangesAsync();
+        return !await _recipeRepository.SaveChangesAsync()
+            ? new Error("Recipe changes could not be persisted!")
+            : new Success();
     }
 
-    public async Task<Recipe?> RestoreDeletedRecipe(int id)
+    public async Task<OneOf<Recipe, NotFound, Error>> RestoreDeletedRecipe(int id)
     {
         var recipeToRestore = await _recipeRepository.GetRecipe(id);
         if (recipeToRestore is null)
-            return null;
+            return new NotFound("Requested recipe does not exist!");
 
         recipeToRestore.DeletedOn = null;
 
-        return await _recipeRepository.SaveChangesAsync() ? mapper.Map<Recipe>(recipeToRestore) : null;
+        return !await _recipeRepository.SaveChangesAsync()
+            ? new Error("Recipe changes could not be persisted!")
+            : mapper.Map<Recipe>(recipeToRestore);
     }
 
-    public async Task<bool> ToggleRecipeLike(int recipeId, LikeRequest request)
+    public async Task<OneOf<Success, Error>> ToggleRecipeLike(int recipeId, LikeRequest request)
     {
         if (request.Like)
         {
-            _recipeRepository.Insert(new RecipeLikes
+            _recipeRepository.Insert(new Entities.RecipeLikes
             {
                 RecipeId = recipeId,
                 UserId = request.LikedById!
@@ -145,18 +167,22 @@ public class RecipeService(RecipeRepoContext context, IMapper mapper, IOptions<A
         }
         else await _recipeRepository.DeleteRecipeLike(recipeId, request.LikedById!);
 
-        return await _recipeRepository.SaveChangesAsync();
+        return !await _recipeRepository.SaveChangesAsync()
+            ? new Error("Recipe like could not be persisted!")
+            : new Success();
     }
 
-    public async Task<bool> AttributeRecipe(AttributionRequest request)
+    public async Task<OneOf<Success, NotFound, Error>> AttributeRecipe(AttributionRequest request)
     {
         var recipe = await _recipeRepository.GetRecipe(request.RecipeId);
 
         if (recipe is null)
-            throw new KeyNotFoundException("Recipe does not exist");
+            return new NotFound("Requested recipe does not exist!");
 
         recipe.UserId = request.UserId;
         recipe.UpdatedOn = DateTime.UtcNow;
-        return await _recipeRepository.SaveChangesAsync();
+        return !await _recipeRepository.SaveChangesAsync()
+            ? new Error("Recipe attribution could not be persisted!")
+            : new Success();
     }
 }

@@ -1,13 +1,9 @@
-﻿using System.Reflection;
-using Microsoft.OpenApi.Models;
-using RecipeRepository.Logic;
+﻿using RecipeRepository.Logic;
 
 namespace RecipeRepository.Api;
 
 public class Startup(IConfiguration configuration, ILogger logger)
 {
-    private readonly string _version = configuration.GetValue<string>("AppSettings:Version")!;
-
     public void ConfigureServices(IServiceCollection services)
     {
         services.EnsureDatabase(configuration);
@@ -45,25 +41,24 @@ public class Startup(IConfiguration configuration, ILogger logger)
         services.AddAuthorization();
 
         // Register the Swagger API documentation generator
-        services.AddSwaggerGen(gen =>
-        {
-            gen.SwaggerDoc(_version, new OpenApiInfo {Title = "Recipe Repository API", Version = _version});
-            gen.CustomSchemaIds(selector => selector.FullName);
-            gen.IncludeXmlComments(Path.Combine(AppContext.BaseDirectory, $"{Assembly.GetExecutingAssembly().GetName().Name}.xml"));
-        });
+        services.AddSwaggerGen().ConfigureOptions<SwaggerOptions>();
     }
 
-    public void Configure(WebApplication app)
+    public static void Configure(WebApplication app)
     {
         if (app.Environment.IsDevelopment())
             app.UseDeveloperExceptionPage();
         else
             app.UseHsts();
 
+        // enable swagger
+        app.UseSwagger();
+        var version = app.Configuration.GetSection("AppSettings:Version").Value;
+        app.UseSwaggerUI(opt => { opt.SwaggerEndpoint($"/swagger/{version}/swagger.json", $"Recipe Repository {version}"); });
+
         app.UseCors();
         app.UseHttpsRedirection();
         app.UseStaticFiles();
-        app.UseCookiePolicy();
 
         app.UseRouting();
         app.UseAuthentication();
@@ -74,9 +69,7 @@ public class Startup(IConfiguration configuration, ILogger logger)
         // url for serving static files
         app.Map("/static", builder => { builder.UseFileServer(); });
 
-        // enable swagger
-        app.UseSwagger();
-        app.UseSwaggerUI(opt => { opt.SwaggerEndpoint($"/swagger/{_version}/swagger.json", $"Recipe Repository {_version}"); });
-
+        // set default url to swagger redirect
+        app.MapGet("/", () => Results.Redirect("/swagger", true, true));
     }
 }
