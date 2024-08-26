@@ -15,14 +15,15 @@ public class SwaggerOptions(IOptions<AppSettings> appOptions) : IConfigureNamedO
         var xmlFilename = $"{Assembly.GetExecutingAssembly().GetName().Name}.xml";
         options.IncludeXmlComments(Path.Combine(AppContext.BaseDirectory, xmlFilename));
 
-        options.SwaggerDoc($"v{_appSettings.Version}", new OpenApiInfo { Title = "Recipe Repository API", Version = _appSettings.Version });
+        options.SwaggerDoc($"v{_appSettings.Version.Split('.').First()}", new OpenApiInfo { Title = "Recipe Repository API", Version = _appSettings.Version });
         options.CustomSchemaIds(selector => selector.FullName);
 
-        options.AddSecurityDefinition("JWT", new OpenApiSecurityScheme
+        options.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
         {
             Type = SecuritySchemeType.Http,
-            Scheme = "bearer",
+            Scheme = "Bearer",
             Name = "Authorization",
+            BearerFormat = "JWT",
             In = ParameterLocation.Header,
             Description = "JWT token to access Recipe Repository API",
         });
@@ -39,7 +40,7 @@ public class SwaggerOptions(IOptions<AppSettings> appOptions) : IConfigureNamedO
                         Id = "JWT"
                     }
                 },
-                new List<string>()
+                []
             }
         });
     }

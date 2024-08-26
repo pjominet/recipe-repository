@@ -1,10 +1,12 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using RecipeRepository.Logic.Interfaces;
 using RecipeRepository.Logic.Models.Nomenclature;
 using RecipeRepository.Api.Infrastructure.Attributes;
 
 namespace RecipeRepository.Api.Controllers;
 
+[Authorize]
 [ApiRoute("tags")]
 public class TagController(ITagService tagService) : ApiController
 {
@@ -17,7 +19,7 @@ public class TagController(ITagService tagService) : ApiController
 
     [HttpGet("{id:int}")]
     [ProducesResponseType(typeof(Tag), StatusCodes.Status200OK)]
-    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
     public async Task<ActionResult<Task>> GetTag([FromRoute] int id)
     {
         var tag = await tagService.GetTag(id);
@@ -29,7 +31,7 @@ public class TagController(ITagService tagService) : ApiController
     [HttpPost]
     [Consumes("application/json")]
     [ProducesResponseType(typeof(Tag), StatusCodes.Status201Created)]
-    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status500InternalServerError)]
     public async Task<ActionResult<Tag>> AddTag([FromBody] Tag tag)
     {
         var newTag = await tagService.CreateTag(tag);
@@ -40,7 +42,7 @@ public class TagController(ITagService tagService) : ApiController
 
     [HttpDelete("{id:int}")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
-    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
     public async Task<IActionResult> DeleteTag([FromRoute] int id)
     {
         return await tagService.DeleteTag(id)
@@ -51,8 +53,8 @@ public class TagController(ITagService tagService) : ApiController
     [HttpPut("{id:int}")]
     [Consumes("application/json")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
-    [ProducesResponseType(StatusCodes.Status400BadRequest)]
-    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status500InternalServerError)]
     public async Task<IActionResult> EditTag([FromRoute] int id, [FromBody] Tag tag)
     {
         if (id != tag.Id)
@@ -72,7 +74,7 @@ public class TagController(ITagService tagService) : ApiController
 
     [HttpGet("categories/{id:int}")]
     [ProducesResponseType(typeof(TagCategory), StatusCodes.Status200OK)]
-    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
     public async Task<ActionResult<TagCategory>> GetTagCategory([FromRoute] int id)
     {
         var tagCategory = await tagService.GetTagCategory(id);

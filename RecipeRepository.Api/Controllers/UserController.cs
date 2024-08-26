@@ -8,8 +8,8 @@ using RecipeRepository.Logic.Models.Identity;
 
 namespace RecipeRepository.Api.Controllers;
 
-[Route("users")]
 [Authorize]
+[Route("users")]
 public class UserController(IUserService userService) : ApiController
 {
     [HttpGet]
@@ -54,13 +54,13 @@ public class UserController(IUserService userService) : ApiController
             );
     }
 
-    [HttpPost("image-upload")]
+    [HttpPost("upload/avatar")]
     [Consumes("multipart/form-data")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status500InternalServerError)]
-    public async Task<IActionResult> UploadUserAvatar([FromForm(Name = "file")] IFormFile image, [FromForm(Name = "id")] string? userId)
+    public async Task<IActionResult> UploadUserAvatar(IFormFile image, [FromQuery(Name = "id")] string? userId)
     {
         if (image is not { Length: > 0 } || !userId.HasValue())
             return BadRequest("Missing information");

@@ -1,6 +1,6 @@
 ﻿namespace RecipeRepository.Logic.Models.Identity;
 
-public enum AppRole
+public static class Roles
 {
-    Admin = 1
+    public const string Admin = "Admin";
 }

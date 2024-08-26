@@ -6,7 +6,7 @@ public class Startup(IConfiguration configuration, ILogger logger)
 {
     public void ConfigureServices(IServiceCollection services)
     {
-        services.EnsureDatabase(configuration);
+        services.UseSqlDatabase(configuration);
 
         services.AddSettings(configuration);
         services.AddAuthentication(configuration);
@@ -22,12 +22,6 @@ public class Startup(IConfiguration configuration, ILogger logger)
                     .AllowAnyHeader());
         });
 
-        services.AddHsts(options =>
-        {
-            options.Preload = true;
-            options.IncludeSubDomains = true;
-        });
-
         services.AddAutoMapper(typeof(LogicAssemblyMarker).Assembly);
 
         services.AddRouting(options =>
@@ -36,25 +30,26 @@ public class Startup(IConfiguration configuration, ILogger logger)
             options.LowercaseQueryStrings = true;
         });
 
-        services.AddControllers();
+        services.AddControllers()
+            .AddControllersAsServices(); // this helps to check if any controllers have missing DIs;
 
         services.AddAuthorization();
 
         // Register the Swagger API documentation generator
+        services.AddEndpointsApiExplorer();
         services.AddSwaggerGen().ConfigureOptions<SwaggerOptions>();
     }
 
     public static void Configure(WebApplication app)
     {
-        if (app.Environment.IsDevelopment())
-            app.UseDeveloperExceptionPage();
-        else
-            app.UseHsts();
-
-        // enable swagger
         app.UseSwagger();
-        var version = app.Configuration.GetSection("AppSettings:Version").Value;
-        app.UseSwaggerUI(opt => { opt.SwaggerEndpoint($"/swagger/{version}/swagger.json", $"Recipe Repository {version}"); });
+        var majorVersion = app.Configuration.GetSection("AppSettings:Version").Value!.Split('.').First();
+        app.UseSwaggerUI(options =>
+        {
+            options.DefaultModelsExpandDepth(-1);
+            options.DefaultModelExpandDepth(-1);
+            options.SwaggerEndpoint($"/swagger/v{majorVersion}/swagger.json", $"Recipe Repository v{majorVersion}");
+        });
 
         app.UseCors();
         app.UseHttpsRedirection();

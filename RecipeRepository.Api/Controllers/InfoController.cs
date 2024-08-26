@@ -6,8 +6,8 @@ using RecipeRepository.Api.Infrastructure.Attributes;
 
 namespace RecipeRepository.Api.Controllers;
 
-[ApiRoute]
 [AllowAnonymous]
+[ApiRoute]
 public class InfoController(IOptions<AppSettings> appOptions) : ApiController
 {
     private readonly AppSettings _appSettings = appOptions.Value;

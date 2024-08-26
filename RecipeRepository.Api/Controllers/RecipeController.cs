@@ -18,7 +18,7 @@ public class RecipeController(IRecipeService recipeService) : ApiController
         return Ok(await recipeService.GetRecipes(tagIds));
     }
 
-    [HttpGet("published-count")]
+    [HttpGet("published/count")]
     [AllowAnonymous]
     [ProducesResponseType(typeof(int), StatusCodes.Status200OK)]
     public async Task<ActionResult<int>> GetPublishedRecipeCount()
@@ -104,13 +104,13 @@ public class RecipeController(IRecipeService recipeService) : ApiController
         );
     }
 
-    [HttpPost("image-upload")]
+    [HttpPost("upload/image")]
     [Consumes("multipart/form-data")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status500InternalServerError)]
-    public async Task<IActionResult> UploadRecipeImage([FromForm(Name = "file")] IFormFile image, [FromForm(Name = "id")] int? recipeId)
+    public async Task<IActionResult> UploadRecipeImage(IFormFile image, [FromQuery(Name = "id")] int? recipeId)
     {
         if (image is not { Length: > 0 } || !recipeId.HasValue)
             return BadRequest("Missing information");

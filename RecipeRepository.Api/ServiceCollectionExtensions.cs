@@ -15,7 +15,7 @@ namespace RecipeRepository.Api;
 
 public static class ServiceCollectionExtensions
 {
-    public static void EnsureDatabase(this IServiceCollection services, IConfiguration configuration)
+    public static void UseSqlDatabase(this IServiceCollection services, IConfiguration configuration)
     {
         services.AddDbContext<RecipeRepoContext>(options =>
             {
